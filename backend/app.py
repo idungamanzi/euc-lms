@@ -9,28 +9,28 @@ from database.seed import seed_database
 
 load_dotenv()
 
-
 def create_app():
     app = Flask(__name__)
 
-    # ── Config ────────
-    app.config["SECRET_KEY"]                  = os.getenv("SECRET_KEY", "dev-secret")
-    app.config["JWT_SECRET_KEY"]              = os.getenv("JWT_SECRET_KEY", "dev-jwt-secret")
-    app.config["SQLALCHEMY_DATABASE_URI"]     = os.getenv("DATABASE_URL", "sqlite:///euc_assessment.db")
+    # ── Config ────────────────────────────────────────────────────────────────
+    app.config["SECRET_KEY"]                     = os.getenv("SECRET_KEY", "dev-secret")
+    app.config["JWT_SECRET_KEY"]                 = os.getenv("JWT_SECRET_KEY", "dev-jwt-secret")
+    app.config["SQLALCHEMY_DATABASE_URI"]        = os.getenv("DATABASE_URL", "sqlite:///euc_assessment.db")
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["JWT_ACCESS_TOKEN_EXPIRES"]    = False  # no expiry for classroom use
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"]       = False
 
-    # ── Extensions ────
+    # ── Extensions ────────────────────────────────────────────────────────────
     db.init_app(app)
     JWTManager(app)
-    allowed_origins = [
-        "http://localhost:5173",
-        os.getenv("FRONTEND_URL", ""),   # set this in Render env vars
-    ]
-    CORS(app, resources={r"/api/*": {"origins": [o for o in allowed_origins if o]}})
 
+    # Allow ALL origins — safe for a classroom LMS with no sensitive public data
+    # Restrict this later by replacing "*" with your exact frontend URL
+    CORS(app, resources={r"/api/*": {"origins": "*"}},
+         supports_credentials=True,
+         allow_headers=["Content-Type", "Authorization"],
+         methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"])
 
-    # ── Blueprints ────
+    # ── Blueprints ────────────────────────────────────────────────────────────
     from routes.student_routes import student_bp
     from routes.admin_routes   import admin_bp
     from routes.test_routes    import test_bp
@@ -41,7 +41,7 @@ def create_app():
     app.register_blueprint(test_bp,    url_prefix="/api/tests")
     app.register_blueprint(attempt_bp, url_prefix="/api/attempt")
 
-    # ── DB init + seed 
+    # ── DB init + seed ────────────────────────────────────────────────────────
     with app.app_context():
         db.create_all()
         seed_database()
