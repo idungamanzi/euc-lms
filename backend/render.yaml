@@ -1,4 +1,0 @@
-# This file is for reference — the actual settings are entered in the Render dashboard
-# but having this here documents your build configuration
-build_command: pip install -r requirements.txt
-start_command: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
